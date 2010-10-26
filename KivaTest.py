@@ -2,10 +2,14 @@
 
 import urllib
 import simplejson
-mormonsJSON = urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read() # Get the names of the Kiva Mormons members.
-newLenderSearch = 'http://api.kivaws.org/v1/lenders/search.json?q=Utah'
-newLendersJSON = urllib.urlopen(newLenderSearch).read()
-mormons = simplejson.loads(mormonsJSON)['lenders'] # Gets list of lenders from Kiva Mormons team. 
-newLenders = simplejson.loads(newLendersJSON)['lenders'] # Gets list of new lenders
-for s in newLenders:
-	print s
+# queryString = 'Utah'
+# newLenderSearch = 'http://api.kivaws.org/v1/lenders/search.json?q=' + queryString
+# newLendersJSON = urllib.urlopen(newLenderSearch).read()
+# newLenders = simplejson.loads(newLendersJSON)['lenders'] # Gets list of new lenders
+# mormonsRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read())['paging']
+mormons = []
+for i in range(5):
+	newJSON = urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json?page=' + str(i+1)).read()
+	new = simplejson.loads(newJSON)['lenders']
+	mormons.extend(new)
+print mormons
