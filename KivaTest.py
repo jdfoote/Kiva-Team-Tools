@@ -8,13 +8,12 @@ try:
 except IOError:
     topFiveUsers = ''
     print "File doesn't exist"
-queryString = 'Utah'
 newLenderSearch = 'http://api.kivaws.org/v1/lenders/search.json?q=Utah&sort_by=newest'
-newLendersRange = simplejson(urllib.urlopen(newLenderSearch).read())['paging']['pages']
+newLendersRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/lenders/search.json?q=Utah&sort_by=newest').read())['paging']['pages']
 potentialMembers = []
-for i in range(10):
-    #newPotentialMembers = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/lenders/search.json?q=' + queryString + '&sort_by=newest&page=' + str(i+1)).read()['lenders']
-    pass
+for i in range(newLendersRange):
+    urlStr = 'http://api.kivaws.org/v1/lenders/search.json?q=Utah&sort_by=newest&page=' + str(i+1)
+    newPotentialMembers = simplejson.loads(urllib.urlopen(urlStr).read())['lenders']
     for j in newPotentialMembers:
         lenderID = j['uid']
         potentialMembers.append(lenderID)
