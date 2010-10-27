@@ -1,7 +1,7 @@
 import urllib
 import simplejson
 try:
-    f = open('last5lenders.txt')
+    f = open('last5lenders.txt','r+')
     topFiveUsers = f.read()
     print topFiveUsers
     f.close()
@@ -17,7 +17,6 @@ for i in range(newLendersRange):
     for j in newPotentialMembers:
         lenderID = j['uid']
         potentialMembers.append(lenderID)
-print potentialMembers
 mormonsRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read())['paging']['pages']
 mormons = []
 for i in range(mormonsRange):
@@ -25,4 +24,11 @@ for i in range(mormonsRange):
     for j in newMormons:
         newLenderID = j['uid']
         mormons.append(newLenderID)
-#print mormons 
+for i in potentialMembers:
+		noMatch = True
+		for j in mormons:
+				if i == j:
+						noMatch = False
+						break
+		if noMatch == False:
+				print "Potential Member:", i
