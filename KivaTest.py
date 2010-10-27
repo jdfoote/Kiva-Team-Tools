@@ -6,10 +6,11 @@ import simplejson
 # newLenderSearch = 'http://api.kivaws.org/v1/lenders/search.json?q=' + queryString
 # newLendersJSON = urllib.urlopen(newLenderSearch).read()
 # newLenders = simplejson.loads(newLendersJSON)['lenders'] # Gets list of new lenders
-# mormonsRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read())['paging']
+mormonsRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read())['paging']['pages']
 mormons = []
-for i in range(5):
-	newJSON = urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json?page=' + str(i+1)).read()
-	new = simplejson.loads(newJSON)['lenders']
-	mormons.extend(new)
+for i in range(mormonsRange):
+	newMormons = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json?page=' + str(i+1)).read())['lenders']
+	for j in newMormons:
+		new = j['uid']
+		mormons.extend(new)
 print mormons
