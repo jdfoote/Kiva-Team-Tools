@@ -35,11 +35,12 @@ i = 1
 while i <= newLendersRange:
     urlStr = 'http://api.kivaws.org/v1/lenders/search.json?q=Utah&sort_by=newest&page=' + str(i)
     newLenders = simplejson.loads(urllib.urlopen(urlStr).read())['lenders']
+    i = i+1
     for j in newLenders:
         lenderID = j['uid']
 	if lenderID not in lastFiveLenders:
 		lenders.append(lenderID)
-		i = i+1
+
 	else:
 		i = newLendersRange + 1 # This is a hack to end the while loop. I don't know how to end it correctly.
 		break
@@ -50,25 +51,23 @@ mormons = []
 i = 1
 while i <= mormonsRange:
     newMormons = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json?page=' + str(i)).read())['lenders']
+    i=i+1
     for j in newMormons:
 		mormonID = j['uid']        
 		if mormonID not in lastFiveMormons:
 			mormons.append(mormonID)
-			i = i+1
 		else:
 			i = mormonsRange + 1
 			break
 
 #Compare the recent lenders and the recent Mormons
+k = 1
 for i in lenders:
-		noMatch = True
-		for j in mormons:
-				if i != j:
-						noMatch = False
-						break
-		if noMatch == False:
-			print 'Potential Recruit: ' + i
-#			webbrowser.open("http://www.kiva.org/lender" + i) # This opens a browser window for each lender's page, so that a message can be sent. We can activate this when we are sure everything is working correctly.
+		if i not in mormons:
+				print 'Potential Recruit: ' + i
+				if k <= 20:
+					webbrowser.open("http://www.kiva.org/lender/" + i) # This opens a browser window for each lender's page, so that a message can be sent. We can activate this when we are sure everything is working correctly.
+					k = k+1
 
 # Write the 5 most recent UIDs to the docs
 s = str(lenders[:5])
