@@ -10,36 +10,32 @@ import webbrowser
 
 #Get the recent lenders and sent invites list
 try:
-    f = open('last5Lenders.txt','r') # Opens the text file
-    lastFiveLenders = eval(f.read()) # Converts the string to a list
-    print lastFiveLenders
+    f = open('lendersList.txt','r') # Opens the text file
+    lenders = eval(f.read()) # Converts the string to a list
     f.close() # Closes the file
 except IOError:
-    lastFiveLenders = ''
+    lenders = []
     print "File doesn't exist"
 
 try:
-    f = open('last5Mormons.txt','r')
-    lastFiveMormons = eval(f.read())
-    print lastFiveMormons
+    f = open('teamList.txt','r')
+    team = eval(f.read())
     f.close()
 except IOError:
-    lastFiveMormons = ''
+    team = []
     print "File doesn't exist"
     
 try:
     f = open('invitesSentList.txt','r')
     inviteSent = eval(f.read())
     f.close()
-    print inviteSent
 except IOError:
-    inviteSent = ''
+    inviteSent = []
     print "File doesn't exist"
 
 
 # Get all of the recent lenders
 newLendersRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/lenders/search.json?q=Utah&sort_by=newest').read())['paging']['pages']
-lenders = []
 i = 1
 while i <= newLendersRange:
     urlStr = 'http://api.kivaws.org/v1/lenders/search.json?q=Utah&sort_by=newest&page=' + str(i) # Load each of the pages
@@ -47,49 +43,47 @@ while i <= newLendersRange:
     i = i+1
     for j in newLenders:
         lenderID = j['uid']
-	if lenderID not in lastFiveLenders:
+	if lenderID not in lenders:
 		lenders.append(lenderID)
 
 	else:
 		i = newLendersRange + 1 # This is a hack to end the while loop. I don't know how to end it correctly.
 		break
 
-# Get all of the recent Mormons
-mormonsRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read())['paging']['pages']
-mormons = []
+# Get all of the recent team members
+teamRange = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json').read())['paging']['pages']
 i = 1
-while i <= mormonsRange:
-    newMormons = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json?sort_by=newest&page=' + str(i)).read())['lenders']
+while i <= teamRange:
+    newTeamMembers = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/teams/96/lenders.json?sort_by=newest&page=' + str(i)).read())['lenders']
     i=i+1
-    for j in newMormons:
-		mormonID = j['uid']        
-		if mormonID not in lastFiveMormons:
-			mormons.append(mormonID)
+    for j in newTeamMembers:
+		memberID = j['uid']        
+		if memberID not in team:
+			team.append(memberID)
 		else:
-			i = mormonsRange + 1
+			i = teamRange + 1
 			break
 
-#Compare the recent lenders and the recent Mormons
+#Compare the recent new Kiva lenders with the team list and the inviteSent list
 k = 0
 for i in lenders:
-		if i not in mormons:
+		if i not in team:
 			if i not in inviteSent:
 				print 'Potential Recruit: ' + i
 				k = k+1
 				if k <= 25:
-					webbrowser.open("http://www.kiva.org/lender/" + i) # This opens a browser window for each lender's page, so that a message can be sent. We can activate this when we are sure everything is working correctly.
+					webbrowser.open("http://www.kiva.org/lender/" + i) # This opens a browser window for each lender's page, so that a message can be sent.
 					inviteSent.append(i)
-					
-## NEXT LENDER: matthew3477					
+								
 
-# Write the 5 most recent UIDs to the docs
-s = str(lenders[:5])
-f = open('last5Lenders.txt', 'w')
+# Write the new UIDs to the docs
+s = str(lenders)
+f = open('lendersList.txt', 'w')
 f.write(s)
 f.close()
 
-s = str(mormons[:5])
-f = open('last5Mormons.txt', 'w')
+s = str(team)
+f = open('teamList.txt', 'w')
 f.write(s)
 f.close()
 
