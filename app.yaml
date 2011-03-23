@@ -8,4 +8,4 @@ handlers:
   static_dir: stylesheets
 
 - url: /.*
-  script: helloworld.py
+  script: kivarecruit_main.py
