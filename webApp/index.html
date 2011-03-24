@@ -1,0 +1,18 @@
+<html>
+	<head>
+		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+	</head>
+  <body>
+    
+<img src="{{ imgurl }}" />
+ 
+    <form action="/displayTeamStats" method="post">
+      <div><h3>Number of teams</h3></div>
+      <div><textarea name="content" rows="1" cols="6"></textarea></div>
+      <div><input type="submit" value="Display Team Stats"></div>
+    </form>
+
+    <a href="{{ url }}">{{ url_linktext }}</a>
+
+  </body>
+</html>

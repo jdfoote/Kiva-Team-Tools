@@ -1,0 +1,4 @@
+cron:
+- description: get team data
+  url: /tasks/teamData
+  schedule: every 24 hours
