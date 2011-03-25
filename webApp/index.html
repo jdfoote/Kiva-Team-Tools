@@ -3,16 +3,18 @@
 		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
 	</head>
   <body>
-    
-<img src="{{ imgurl }}" />
+
+Team ID = {{ teamID }}<br/>
+Team Stats = {{ teamStats }}
+<!-- <img src="{{ imgurl }}" /> --->
  
     <form action="/displayTeamStats" method="post">
-      <div><h3>Number of teams</h3></div>
-      <div><textarea name="content" rows="1" cols="6"></textarea></div>
+      <div><h3>Team Name:</h3></div>
+      <div><textarea name="teamName" rows="1" cols="30"></textarea></div>
       <div><input type="submit" value="Display Team Stats"></div>
+      <!-- <div><input type="hidden" name="teamID" value="{{ teamID }}"> -->
     </form>
-
-    <a href="{{ url }}">{{ url_linktext }}</a>
 
   </body>
 </html>
+

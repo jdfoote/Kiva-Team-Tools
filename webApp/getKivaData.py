@@ -1,4 +1,3 @@
-import atom
 import string
 import urllib
 import simplejson
@@ -41,3 +40,23 @@ def getAllTeamMembers(teamID):
 			teamMembers.append(lender)
 		i += 1
 	return teamMembers
+
+def getTeamInfo(teamID):
+	'''Returns the info for a team, given the team ID.'''
+	url = 'http://api.kivaws.org/v1/teams/' + str(teamID) + '.json'
+	teamInfoList = simplejson.loads(urllib.urlopen(url).read())['teams']
+	if teamInfoList:
+		teamInfo = teamInfoList[0]
+		return teamInfo
+	else:
+		return None
+	
+def getTeamID(query):
+	'''Searches for a team ID, given a string'''
+	url = 'http://api.kivaws.org/v1/teams/search.json?q=' + str(query) + '&sort_by=query_relevance'
+	teamInfoList = simplejson.loads(urllib.urlopen(url).read())['teams']
+	if teamInfoList:
+		teamID = teamInfoList[0]['id']
+		return teamID
+	else:
+		return None
