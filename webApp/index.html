@@ -3,17 +3,20 @@
 		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
 	</head>
   <body>
-
-Team ID = {{ teamID }}<br/>
-Team Stats = {{ teamStats }}
-<!-- <img src="{{ imgurl }}" /> --->
  
     <form action="/displayTeamStats" method="post">
-      <div><h3>Team Name:</h3></div>
+      <div><h3>Team Name or Team ID:</h3></div>
       <div><textarea name="teamName" rows="1" cols="30"></textarea></div>
       <div><input type="submit" value="Display Team Stats"></div>
       <!-- <div><input type="hidden" name="teamID" value="{{ teamID }}"> -->
     </form>
+{% if teamID %}
+	Team ID = {{ teamID }}<br/>
+	Team Stats = {{ teamStats }}
+	<img src="{{ amountLoanedURL }}" />
+{% else %}
+	<b>No team chosen</b>
+{% endif %}
 
   </body>
 </html>

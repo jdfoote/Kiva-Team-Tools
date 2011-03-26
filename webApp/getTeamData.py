@@ -5,14 +5,20 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class cronGetTeams(webapp.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('Loading teams into the DB')
-        teamsDone = getTeamData(50)
-        self.response.out.write(str(teamsDone) + ' teams loaded')
+        self.response.headers['Content-Type'] = 'html'
+        self.response.out.write('<html><body>Loading teams into the DB')
+        teamsDone = getTeamData()
+        self.response.out.write('<br/>' + str(teamsDone) + ' teams loaded')
 
-def getTeamData(teamCount):
+def getTeamData():
 	# Get all of the teams
-	allTeams = getKivaData.getTeams(teamCount)
+#	teamNames_query = kivarecruit_main.TeamStats.all()
+#	teamNamesObject = teamNames_query.fetch(1000)
+	teamIDList = []
+#	for p in teamNamesObject:
+#		teamIDList.append(p.teamID)
+	# Get the info
+	allTeams = getKivaData.getRankedTeams(2000)
 	# Just get the stuff we want
 	teamData=[]
 	for team in allTeams:
@@ -30,7 +36,7 @@ def getTeamData(teamCount):
 		teamInsert.loans = team['loans']
 		teamInsert.put()
 		i += 1
-	return i
+	return i - 1
 
 application = webapp.WSGIApplication(
                                      [('/tasks/teamData', cronGetTeams)],

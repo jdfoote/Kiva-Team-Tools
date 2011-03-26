@@ -2,7 +2,23 @@ import string
 import urllib
 import simplejson
 
-def getTeams(numberOfTeams):
+def getTeams(listOfTeams):
+	'''Given a list of team IDs, returns a list of dictionaries with team information'''
+	stringList = [str(i) for i in listOfTeams]
+	teamInfo = []
+	start = 0
+	end = 20
+	while start < len(listOfTeams):
+		teamList = ','.join(stringList[start:end])
+		urlStr = 'http://api.kivaws.org/v1/teams/' + teamList + '.json'
+		newTeams = simplejson.loads(urllib.urlopen(urlStr).read())['teams']
+		start += 20
+		end += 20
+		for team in newTeams:
+			teamInfo.append(team)
+	return teamInfo
+
+def getRankedTeams(numberOfTeams):
 	'''Returns a list of dictionaries with team information for the top n teams'''
 	keepGoing = 'true'
 	rankedTeams = []
@@ -57,6 +73,16 @@ def getTeamID(query):
 	teamInfoList = simplejson.loads(urllib.urlopen(url).read())['teams']
 	if teamInfoList:
 		teamID = teamInfoList[0]['id']
-		return teamID
+		return int(teamID)
+	else:
+		return None
+		
+def getTeamName(teamID):
+	'''Returns a team name, given an ID'''
+	url = 'http://api.kivaws.org/v1/teams/' + str(teamID) + '.json'
+	teamInfoList = simplejson.loads(urllib.urlopen(url).read())['teams']
+	if teamInfoList:
+		teamName = teamInfoList[0]['name']
+		return teamName
 	else:
 		return None
