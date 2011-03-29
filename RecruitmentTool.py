@@ -31,6 +31,7 @@ except IOError:
 def getLenders(query,recruitsNeeded):
 	print 'Starting query ' + query
 	totalPages = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/lenders/search.json?country_code=US&q=' + query + '&sort_by=newest').read())['paging']['pages']
+	print 'Total Pages: ' + totalPages
 	i = 1
 	while i <= totalPages and recruitsNeeded > 0:
 		urlStr = 'http://api.kivaws.org/v1/lenders/search.json?country_code=US&q=' + query + '&sort_by=newest&page=' + str(i)

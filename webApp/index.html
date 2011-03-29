@@ -1,23 +1,48 @@
 <html>
-	<head>
-		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
-	</head>
-  <body>
- 
-    <form action="/displayTeamStats" method="post">
-      <div><h3>Team Name or Team ID:</h3></div>
-      <div><textarea name="teamName" rows="1" cols="30"></textarea></div>
-      <div><input type="submit" value="Display Team Stats"></div>
-      <!-- <div><input type="hidden" name="teamID" value="{{ teamID }}"> -->
-    </form>
-{% if teamID %}
-	Team ID = {{ teamID }}<br/>
-	Team Stats = {{ teamStats }}
-	<img src="{{ amountLoanedURL }}" />
-{% else %}
-	<b>No team chosen</b>
-{% endif %}
+<head>
+	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Kiva Team Tools</title>
+{% if charts %}
+	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+	<script type="text/javascript">
+	google.load('visualization', '1', {packages: ['annotatedtimeline']});
+	function drawVisualization() {
+		{% for chart in charts %}var {{ chart.chartType }}Data = new google.visualization.DataTable();
+			{{ chart.chartType }}Data.addColumn('datetime', 'Date');
+			{% for column in chart.columns %}{{ chart.chartType }}Data.addColumn('number', '{{ column }}');
+			{% endfor %}{{ chart.chartType }}Data.addRows([{% for dataRow in chart.data %}[new Date{{ dataRow }}],
+			{% endfor %}])
+			var {{ chart.chartType }}Chart = new google.visualization.AnnotatedTimeLine(
+			document.getElementById('{{ chart.chartType }}Chart'));
+			{{ chart.chartType }}Chart.draw({{ chart.chartType }}Data, {'displayAnnotations': false});
+		{% endfor %}
 
-  </body>
+	}
+	
+	google.setOnLoadCallback(drawVisualization);
+	</script>
+{% else %}
+{% endif %}
+	</head>
+	<body>
+ 
+	<form action="/displayTeamStats" method="post">
+		<div><h3>Team Name or Team ID:</h3></div>
+		<div><input type="text" name="teamName" size="30"/></div>
+		<div><input type="submit" value="Display Team Stats"/></div>
+	</form>
+{% if errorMessage %}
+<b>{{ errorMessage }}</b>
+{% else %}
+{% if rank %}
+<h2>Current Rank: {{ rank }}</h2>
+{% endif %}
+{% for chart in charts %}
+<h2>{{ chart.chartName }}</h2>
+<div id="{{ chart.chartType }}Chart" style="width:800; height:500"></div>
+{% endfor %}
+{% endif %}
+	</body>
 </html>
 
