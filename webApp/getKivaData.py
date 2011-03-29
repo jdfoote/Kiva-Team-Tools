@@ -27,16 +27,25 @@ def getRankedTeams(numberOfTeams):
 	i = 1
 	while keepGoing == 'true':
 			urlStr = 'http://api.kivaws.org/v1/teams/search.json&sort_by=loaned_amount&page=' + str(i)
-			content = simplejson.loads(urllib2.urlopen(urlStr).read())
-			newTeams = content['teams']
-			i += 1
-			for team in newTeams:
-				# Stop when we hit the number of teams requested
-				if len(rankedTeams) < numberOfTeams:
-					rankedTeams.append(team)
-				else:
-					keepGoing = 'false'
-					break
+			try:
+				response = urllib2.urlopen(urlStr)
+				content = simplejson.loads(response.read())
+				newTeams = content['teams']
+				i += 1
+				for team in newTeams:
+					# Stop when we hit the number of teams requested
+					if len(rankedTeams) < numberOfTeams:
+						rankedTeams.append(team)
+					else:
+						keepGoing = 'false'
+						break
+			except URLError, e:
+				if hasattr(e, 'reason'):
+					return 'We failed to reach a server.'
+					print 'Reason: ', e.reason
+				elif hasattr(e, 'code'):
+					return 'The server couldn\'t fulfill the request.'
+					print 'Error code: ', e.code
 	return rankedTeams
 
 # This is pretty unnecessary, but I use it anyway.
