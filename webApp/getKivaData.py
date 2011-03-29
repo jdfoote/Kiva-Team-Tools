@@ -39,7 +39,7 @@ def getRankedTeams(numberOfTeams):
 					else:
 						keepGoing = 'false'
 						break
-			except URLError, e:
+			except urllib2.URLError, e:
 				if hasattr(e, 'reason'):
 					return 'We failed to reach a server.'
 					print 'Reason: ', e.reason
