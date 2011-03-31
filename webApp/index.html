@@ -15,7 +15,7 @@
 			{% endfor %}])
 			var {{ chart.chartType }}Chart = new google.visualization.AnnotatedTimeLine(
 			document.getElementById('{{ chart.chartType }}Chart'));
-			{{ chart.chartType }}Chart.draw({{ chart.chartType }}Data, {'displayAnnotations': false, 'scaleType': 'maximized'});
+			{{ chart.chartType }}Chart.draw({{ chart.chartType }}Data, {'displayAnnotations': false, 'scaleType': 'maximized', 'displayExactValues': true});
 		{% endfor %}
 
 	}
