@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -35,11 +36,10 @@ class TeamHandler(webapp.RequestHandler):
 		# If it's a number, assume that it's the Team ID
 		if is_number(teamNameInput):
 			teamID = int(teamNameInput)
-		# If it's a string, then get the team ID of the first match
+			teamName = getKivaData.getTeamName(teamID)
+		# If it's a string, then get the team ID and name of the first match
 		else:
-			teamID = getKivaData.getTeamID(teamNameInput)
-		# Get the official name of the team
-		teamName = getKivaData.getTeamName(teamID)
+			teamID, teamName = getKivaData.getTeamID(teamNameInput)
 		# Figure out if the team is in the TeamNames DB. If it isn't, then add it.
 		# Eventually, we can choose to get data from teams in this DB, that aren't in the top 2000 teams.
 		teamNames_query = TeamNames.all().filter('teamID =',teamID)

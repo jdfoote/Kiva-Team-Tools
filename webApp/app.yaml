@@ -3,12 +3,16 @@ version: 1
 runtime: python
 api_version: 1
 
+builtins:
+- datastore_admin: on
+
 handlers:
 - url: /stylesheets
   static_dir: stylesheets
 
 - url: /tasks/teamData
   script: getTeamData.py
+  login: admin
   
 - url: /.*
   script: kivarecruit_main.py

@@ -9,13 +9,13 @@
 	google.load('visualization', '1', {packages: ['annotatedtimeline']});
 	function drawVisualization() {
 		{% for chart in charts %}var {{ chart.chartType }}Data = new google.visualization.DataTable();
-			{{ chart.chartType }}Data.addColumn('datetime', 'Date');
+			{{ chart.chartType }}Data.addColumn('date', 'Date');
 			{% for column in chart.columns %}{{ chart.chartType }}Data.addColumn('number', '{{ column }}');
 			{% endfor %}{{ chart.chartType }}Data.addRows([{% for dataRow in chart.data %}[new Date{{ dataRow }}],
 			{% endfor %}])
 			var {{ chart.chartType }}Chart = new google.visualization.AnnotatedTimeLine(
 			document.getElementById('{{ chart.chartType }}Chart'));
-			{{ chart.chartType }}Chart.draw({{ chart.chartType }}Data, {'displayAnnotations': false});
+			{{ chart.chartType }}Chart.draw({{ chart.chartType }}Data, {'displayAnnotations': false, 'scaleType': 'maximized'});
 		{% endfor %}
 
 	}

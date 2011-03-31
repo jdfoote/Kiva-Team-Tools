@@ -1,6 +1,8 @@
+#!/usr/bin/python
 import string
 import urllib2
 import simplejson
+from google.appengine.api.urlfetch import DownloadError 
 
 # This may be used in the future, to get a specific list of teams. The downside is that this wouldn't give us ranking info.
 def getTeams(listOfTeams):
@@ -41,11 +43,14 @@ def getRankedTeams(numberOfTeams):
 						break
 			except urllib2.URLError, e:
 				if hasattr(e, 'reason'):
-					return 'We failed to reach a server.'
+					return None
 					print 'Reason: ', e.reason
 				elif hasattr(e, 'code'):
-					return 'The server couldn\'t fulfill the request.'
+					return None
 					print 'Error code: ', e.code
+			except DownloadError:
+				return None
+				return
 	return rankedTeams
 
 # This is pretty unnecessary, but I use it anyway.
@@ -93,7 +98,8 @@ def getTeamID(query):
 	teamInfoList = content['teams']
 	if teamInfoList:
 		teamID = teamInfoList[0]['id'] # There may be multiple results here, but we only return the first
-		return int(teamID)
+		teamName = teamInfoList[0]['name']
+		return int(teamID), teamName
 	else:
 		return None
 		

@@ -2,6 +2,7 @@
 import urllib
 import simplejson
 import webbrowser
+import sys
 
 #Get the recent lenders and sent invites list
 try:
@@ -31,7 +32,7 @@ except IOError:
 def getLenders(query,recruitsNeeded):
 	print 'Starting query ' + query
 	totalPages = simplejson.loads(urllib.urlopen('http://api.kivaws.org/v1/lenders/search.json?country_code=US&q=' + query + '&sort_by=newest').read())['paging']['pages']
-	print 'Total Pages: ' + totalPages
+	print 'Total Pages: ' + str(totalPages)
 	i = 1
 	while i <= totalPages and recruitsNeeded > 0:
 		urlStr = 'http://api.kivaws.org/v1/lenders/search.json?country_code=US&q=' + query + '&sort_by=newest&page=' + str(i)
@@ -81,7 +82,10 @@ def getNewTeamMembers(teamID, stillNeeded):
 	memberResults = {'newMembers': membersAdded, 'emailsLeft': stillNeeded}
 	return memberResults
 				
-emailsAllowed = 25
+if len(sys.argv) > 1:
+	emailsAllowed = int(sys.argv[1])
+else:
+	emailsAllowed = 25
 teamID = 96
 memberResults = getNewTeamMembers(teamID, emailsAllowed)
 print 'New Team Members: ' + str(memberResults['newMembers'])
