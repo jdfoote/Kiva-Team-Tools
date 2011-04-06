@@ -46,6 +46,7 @@ class TeamHandler(webapp.RequestHandler):
 		teamNames = teamNames_query.get()
 		if teamNames is None:
 			teamNameInsert = TeamNames()
+			teamNameInsert.key_name = int(teamID)
 			teamNameInsert.teamID = teamID
 			teamNameInsert.teamName = teamName
 			teamNameInsert.put()

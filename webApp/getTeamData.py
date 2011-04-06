@@ -23,7 +23,7 @@ def getTeamData():
 		for team in allTeams:
 			teamData.append(getKivaData.getTeamStats(team))
 		# Put the team data into the DB.
-		i = 1
+		i = 0
 		newData = []
 		for team in teamData:
 			teamInsert = kivarecruit_main.TeamStats(teamID = team['teamID'],
@@ -34,7 +34,7 @@ def getTeamData():
 			newData.append(teamInsert)
 			i += 1
 		kivarecruit_main.db.put(newData)
-		return i - 1
+		return i
 	else:
 		return None
 

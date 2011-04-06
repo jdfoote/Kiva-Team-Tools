@@ -14,5 +14,9 @@ handlers:
   script: getTeamData.py
   login: admin
   
+- url: /tasks/teamNames
+  script: getTeamNames.py
+  login: admin
+  
 - url: /.*
   script: kivarecruit_main.py

@@ -101,7 +101,7 @@ def getTeamID(query):
 		teamName = teamInfoList[0]['name']
 		return int(teamID), teamName
 	else:
-		return None
+		return None, None
 		
 def getTeamName(teamID):
 	'''Returns a team name, given an ID'''

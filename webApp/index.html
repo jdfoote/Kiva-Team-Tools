@@ -1,9 +1,25 @@
 <html>
 <head>
-	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<title>Kiva Team Tools</title>
+	<style type="text/css" title="currentStyle">
+		@import "main.css";
+		@import "static/css/ui-lightness/jquery-ui-1.8.11.custom.css";
+		@import "static/css/demo_page.css";
+		@import "static/css/demo_table.css";
+	</style>
+	<script type="text/javascript" language="javascript" src="static/js/jquery.js"></script>
+	<script type="text/javascript" language="javascript" src="static/js/jquery-ui-1.8.11.custom.min.js"></script>
 {% if charts %}
+	<script type="text/javascript" language="javascript" src="static/js/jquery.dataTables.js"></script>
+	<script type="text/javascript" charset="utf-8">
+	$(document).ready(function() {
+		oTable = $('#teamTable').dataTable({
+			"bJQueryUI": true,
+			"sPaginationType": "two_button"
+		});
+	} );
+	</script>
 	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
 	<script type="text/javascript">
 	google.load('visualization', '1', {packages: ['annotatedtimeline']});
@@ -42,6 +58,41 @@
 <h2>{{ chart.chartName }}</h2>
 <div id="{{ chart.chartType }}Chart" style="width:800; height:500"></div>
 {% endfor %}
+{% if teamTableData %}
+<table cellpadding="0" cellspacing="0" border="0" class="display" id="teamTable">
+	<thead>
+		<tr>
+			<th>Rank</th>
+			<th>Team Name</th>
+			<th>Creation Date</th>
+			<th>Members</th>
+			<th>Amount Loaned</th>
+			<th>Loans</th>
+			<th>Amount Loaned per Member</th>
+			<th>Members per day</th>
+			<th>Loans per day</th>
+		</tr>
+
+	</thead>
+	<tbody>
+	{% for teamDataItem in teamTableData %}
+		{% ifequal teamDataItem.teamName teamName %}
+		<tr class="currentTeam">
+		{% else %}
+		<tr class="normalTeam">
+		{% endifequal %}
+		<td/>
+		<td> {{ teamDataItem.teamName }} </td>
+		<td> {{ teamDataItem.creationDate }} </td>
+		<td> {{ teamDataItem.members }} </td>
+		<td> {{ teamDataItem.amountLoaned }} </td>
+		<td> {{ teamDataItem.loans }} </td>
+		<td> {{ teamDataItem.amountPerMember }} </td>
+		<td> {{ teamDataItem.membersPerDay }} </td>
+		<td> {{ teamDataItem.loansPerDay }} </td>
+		</tr>
+	{% endfor %}
+	{% endif %}
 {% endif %}
 	</body>
 </html>
