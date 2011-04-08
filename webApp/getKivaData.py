@@ -2,7 +2,8 @@
 import string
 import urllib2
 import simplejson
-from google.appengine.api.urlfetch import DownloadError 
+#from google.appengine.api.urlfetch import DownloadError 
+import datetime
 
 # This may be used in the future, to get a specific list of teams. The downside is that this wouldn't give us ranking info.
 def getTeams(listOfTeams):
@@ -58,6 +59,15 @@ def getTeamStats(teamInfo):
 	'''Grabs only the desired statistics for the given team, and puts them into a dictionary'''
 	teamStats = {'teamID': teamInfo['id'], 'members': teamInfo['member_count'], 'loans': teamInfo['loan_count'], 'loanAmount': teamInfo['loaned_amount']}
 	return teamStats
+
+def prepTeamTableStats(teamsInfo):
+	teamTableStats = []
+	for team in teamsInfo:
+		teamCreation = datetime.datetime.strptime(team['team_since'], '%Y-%m-%dT%H:%M:%SZ')
+		teamDuration = (datetime.datetime.utcnow() - teamCreation).days
+		teamStats = {'teamName': team['name'], 'members': team['member_count'], 'loans': team['loan_count'], 'loanAmount': team['loaned_amount'], 'teamDuration': teamDuration, 'amountPerMember': team['loaned_amount']/team['member_count'], 'membersPerDay': team['member_count']/teamDuration, 'loanAmountPerDay': team['loaned_amount']/teamDuration}
+		teamTableStats.append(teamStats)
+	return teamTableStats
 
 # We don't use this yet, so I'm not positive how well it works, but it may be useful later.
 def getAllTeamMembers(teamID):

@@ -19,11 +19,17 @@ def getTeamData():
 	allTeams = getKivaData.getRankedTeams(2000)
 	# Just get the stuff we want
 	if allTeams:
+		# Info for the team stats stored in the DB
 		teamData=[]
 		for team in allTeams:
 			teamData.append(getKivaData.getTeamStats(team))
+		# Info for the current table of all teams
+		teamTableData = getKivaData.prepTeamTableStats(allTeams)
 		# Put the team data into the DB.
-		i = 0
+		teamTableInsert = kivarecruit_main.TeamTableData(key_name = 'currentData',
+														teamTable = str(teamTableData))
+		teamTableInsert.put()
+		i = 1
 		newData = []
 		for team in teamData:
 			teamInsert = kivarecruit_main.TeamStats(teamID = team['teamID'],
@@ -34,7 +40,7 @@ def getTeamData():
 			newData.append(teamInsert)
 			i += 1
 		kivarecruit_main.db.put(newData)
-		return i
+		return i-1
 	else:
 		return None
 

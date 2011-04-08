@@ -7,8 +7,11 @@ builtins:
 - datastore_admin: on
 
 handlers:
-- url: /stylesheets
-  static_dir: stylesheets
+- url: /css
+  static_dir: static/css
+
+- url: /js
+  static_dir: static/js
 
 - url: /tasks/teamData
   script: getTeamData.py

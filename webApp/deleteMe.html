@@ -1,52 +1,37 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		<link rel="shortcut icon" type="image/ico" href="http://www.datatables.net/favicon.ico" />
-		
-		<title>DataTables example</title>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Kiva Team Tools</title>
 		<style type="text/css" title="currentStyle">
 			@import "static/css/ui-lightness/jquery-ui-1.8.11.custom.css";
 			@import "static/css/demo_page.css";
 			@import "static/css/demo_table.css";
 			@import "static/css/main.css";
 		</style>
-		<script type="text/javascript" language="javascript" src="static/js/jquery.js"></script>
+		<script type="text/javascript" language="javascript" src="/static/js/jquery.js"></script>
 		<script type="text/javascript" language="javascript" src="static/js/jquery-ui-1.8.11.custom.min.js"></script>
 		<script type="text/javascript" language="javascript" src="static/js/jquery.dataTables.js"></script>
 		<script type="text/javascript" charset="utf-8">
-		$.fn.dataTableExt.oApi.fnDisplayRow = function ( oSettings, nRow )
-{
-	var iPos = -1;
-	for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
-	{
-		if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
-		{
-			iPos = i;
-			break;
-		}
-	}
-	
-	if( iPos >= 0 )
-	{
-		oSettings._iDisplayStart = ( Math.floor(i / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
-		this.oApi._fnCalculateEnd( oSettings );
-	}
-	
-	this.oApi._fnDraw( oSettings );
-}
-
-/* Example use */
-var oTable;
-$(document).ready(function() {
-	oTable = $('#example').dataTable({
-				"bJQueryUI": true,
-				"sPaginationType": "two_button"
-			});
-	oTable.fnDisplayRow( oTable.fnGetNodes(15) );
-} );
-		</script>
-	</head>
+			$(document).ready(function() {
+				$('#teamTable').dataTable( {
+					"fnDrawCallback": function ( oSettings ) {
+						/* Need to redo the counters if filtered or sorted */
+						if ( oSettings.bSorted || oSettings.bFiltered )
+						{
+							for ( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+							{
+								$('td:eq(0)', oSettings.aoData[ oSettings.aiDisplay[i] ].nTr ).html( i+1 );
+							}
+						}
+					},
+					"aoColumnDefs": [
+						{ "bSortable": false, "aTargets": [ 0 ] }
+					],
+					"aaSorting": [[ 1, 'asc' ]]
+				} );
+			} );
+</script>
 	<body id="dt_example">
 		<div id="container">
 			<div class="full_width big">
@@ -58,8 +43,44 @@ $(document).ready(function() {
 			<p><i>DataTables</i> has most features enabled by default, so all you need to do to use it with one of your own tables is to call the construction function (as shown below).</p>
 			
 			<h1>Live example</h1>
-			<div id="demo">
-<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
+
+<!-- {% if teamTableData %}
+<table cellpadding="0" cellspacing="0" border="0" class="display" id="teamTable">
+	<thead>
+		<tr>
+			<th>Rank</th>
+			<th>Team Name</th>
+			<th>Days in Existence</th>
+			<th>Members</th>
+			<th>Amount Loaned</th>
+			<th>Loans</th>
+			<th>Amount Loaned per Member</th>
+			<th>Members per day</th>
+			<th>Amount loaned per day</th>
+		</tr>
+
+	</thead>
+	<tbody>
+	{% for teamDataItem in teamTableData %}
+		{% ifequal teamDataItem.teamName teamName %}
+		<tr class="currentTeam">
+		{% else %}
+		<tr class="normalTeam">
+		{% endifequal %}
+		<td/>
+		<td> {{ teamDataItem.teamName }} </td>
+		<td> {{ teamDataItem.teamDuration }} </td>
+		<td> {{ teamDataItem.members }} </td>
+		<td> {{ teamDataItem.loanAmount }} </td>
+		<td> {{ teamDataItem.loans }} </td>
+		<td> {{ teamDataItem.amountPerMember }} </td>
+		<td> {{ teamDataItem.membersPerDay }} </td>
+		<td> {{ teamDataItem.loanAmountPerDay }} </td>
+		</tr>
+	{% endfor %}
+	{% endif %}
+			<div id="demo"> -->
+<table cellpadding="0" cellspacing="0" border="0" class="display" id="teamTable">
 	<thead>
 		<tr>
 
@@ -543,6 +564,6 @@ $(document).ready(function() {
 			<th>CSS grade</th>
 		</tr>
 	</tfoot>
-</table>
+</table> -->
 </body>
 </html>

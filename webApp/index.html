@@ -2,24 +2,59 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<title>Kiva Team Tools</title>
-	<style type="text/css" title="currentStyle">
-		@import "main.css";
-		@import "static/css/ui-lightness/jquery-ui-1.8.11.custom.css";
-		@import "static/css/demo_page.css";
-		@import "static/css/demo_table.css";
-	</style>
-	<script type="text/javascript" language="javascript" src="static/js/jquery.js"></script>
-	<script type="text/javascript" language="javascript" src="static/js/jquery-ui-1.8.11.custom.min.js"></script>
+		<style type="text/css" title="currentStyle">
+			@import "/css/ui-lightness/jquery-ui-1.8.11.custom.css";
+			@import "/css/demo_page.css";
+			@import "/css/demo_table.css";
+			@import "/css/main.css";
+		</style>
+		<script type="text/javascript" language="javascript" src="/js/jquery.js"></script>
+		<script type="text/javascript" language="javascript" src="/js/jquery-ui-1.8.11.custom.min.js"></script>
+		<script type="text/javascript" language="javascript" src="/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		$.fn.dataTableExt.oApi.fnDisplayRow = function ( oSettings, nRow )
+{
+	var iPos = -1;
+	for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+	{
+		if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
+		{
+			iPos = i;
+			break;
+		}
+	}
+	
+	if( iPos >= 0 )
+	{
+		oSettings._iDisplayStart = ( Math.floor(i / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
+		this.oApi._fnCalculateEnd( oSettings );
+	}
+	
+	this.oApi._fnDraw( oSettings );
+}
+	var oTable;
+		$(document).ready(function() {
+		oTable = $('#teamTable').dataTable( {
+				"fnDrawCallback": function ( oSettings ) {
+					/* Need to redo the counters if filtered or sorted */
+					if ( oSettings.bSorted || oSettings.bFiltered )
+					{
+						for ( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+						{
+							$('td:eq(0)', oSettings.aoData[ oSettings.aiDisplay[i] ].nTr ).html( i+1 );
+						}
+					}
+				},
+				"aoColumnDefs": [
+					{ "bSortable": false, "aTargets": [ 0 ] }
+				],
+				"aaSorting": [[ 4, 'desc' ]],
+				"bJQueryUI": true,
+			} );
+			oTable.fnDisplayRow( oTable.fnGetNodes()[{{ rank }}] );
+		} );
+</script>
 {% if charts %}
-	<script type="text/javascript" language="javascript" src="static/js/jquery.dataTables.js"></script>
-	<script type="text/javascript" charset="utf-8">
-	$(document).ready(function() {
-		oTable = $('#teamTable').dataTable({
-			"bJQueryUI": true,
-			"sPaginationType": "two_button"
-		});
-	} );
-	</script>
 	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
 	<script type="text/javascript">
 	google.load('visualization', '1', {packages: ['annotatedtimeline']});
@@ -51,48 +86,57 @@
 {% if errorMessage %}
 <b>{{ errorMessage }}</b>
 {% else %}
-{% if rank %}
-<h2>Current Rank: {{ rank }}</h2>
-{% endif %}
-{% for chart in charts %}
-<h2>{{ chart.chartName }}</h2>
-<div id="{{ chart.chartType }}Chart" style="width:800; height:500"></div>
-{% endfor %}
+
+<!-- Load the team table -->
 {% if teamTableData %}
+<div id="teamTableDiv">
+<h2>Kiva Teams Table</h2>
 <table cellpadding="0" cellspacing="0" border="0" class="display" id="teamTable">
 	<thead>
 		<tr>
 			<th>Rank</th>
 			<th>Team Name</th>
-			<th>Creation Date</th>
+			<th>Days in Existence</th>
 			<th>Members</th>
 			<th>Amount Loaned</th>
 			<th>Loans</th>
 			<th>Amount Loaned per Member</th>
-			<th>Members per day</th>
-			<th>Loans per day</th>
+			<th>New Members per Day</th>
+			<th>Amount loaned per Day</th>
 		</tr>
-
 	</thead>
+
+<!-- Load each of the rows of team data -->
 	<tbody>
 	{% for teamDataItem in teamTableData %}
 		{% ifequal teamDataItem.teamName teamName %}
-		<tr class="currentTeam">
+		<tr class="ui-state-hover">
 		{% else %}
 		<tr class="normalTeam">
 		{% endifequal %}
 		<td/>
 		<td> {{ teamDataItem.teamName }} </td>
-		<td> {{ teamDataItem.creationDate }} </td>
+		<td> {{ teamDataItem.teamDuration }} </td>
 		<td> {{ teamDataItem.members }} </td>
-		<td> {{ teamDataItem.amountLoaned }} </td>
+		<td> {{ teamDataItem.loanAmount }} </td>
 		<td> {{ teamDataItem.loans }} </td>
 		<td> {{ teamDataItem.amountPerMember }} </td>
 		<td> {{ teamDataItem.membersPerDay }} </td>
-		<td> {{ teamDataItem.loansPerDay }} </td>
+		<td> {{ teamDataItem.loanAmountPerDay }} </td>
 		</tr>
 	{% endfor %}
+	</table>
+	</div>
 	{% endif %}
+	
+{% if rank %}
+<h2>Current Rank: {{ rank }}</h2>
+{% endif %}
+{% for chart in charts %}
+<h2>{{ chart.chartName }}</h2>
+<div id="{{ chart.chartType }}Chart" class="charts"></div>
+{% endfor %}
+
 {% endif %}
 	</body>
 </html>

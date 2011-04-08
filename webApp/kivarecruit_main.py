@@ -5,6 +5,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 import getKivaData
 from google.appengine.ext import db
+import simplejson
 
 # Database classes
 # This class stores daily stats for a team
@@ -21,11 +22,19 @@ class TeamNames(db.Model):
 	teamID = db.IntegerProperty()
 	teamName = db.StringProperty()
 
+# This DB just stores the current team table
+class TeamTableData(db.Model):
+	teamTable = db.TextProperty()
+
 
 class MainPage(webapp.RequestHandler):
 	def get(self):
 		path = os.path.join(os.path.dirname(__file__), 'index.html')
-		template_values = {}
+		# Get the table data from the DB
+		teamTable_query = TeamTableData.all()
+		teamTableQueryData = teamTable_query.get()
+		teamTableData = eval(teamTableQueryData.teamTable)
+		template_values = {'teamTableData': teamTableData}
 		charts = []
 		self.response.out.write(template.render(path, template_values))
 
@@ -33,29 +42,34 @@ class TeamHandler(webapp.RequestHandler):
 	def post(self):
 		# Get the input from the web form
 		teamNameInput = self.request.get("teamName")
+
 		# If it's a number, assume that it's the Team ID
 		if is_number(teamNameInput):
 			teamID = int(teamNameInput)
 			teamName = getKivaData.getTeamName(teamID)
+
 		# If it's a string, then get the team ID and name of the first match
 		else:
 			teamID, teamName = getKivaData.getTeamID(teamNameInput)
+
 		# Figure out if the team is in the TeamNames DB. If it isn't, then add it.
 		# Eventually, we can choose to get data from teams in this DB, that aren't in the top 2000 teams.
 		teamNames_query = TeamNames.all().filter('teamID =',teamID)
 		teamNames = teamNames_query.get()
 		if teamNames is None:
 			teamNameInsert = TeamNames()
-			teamNameInsert.key_name = int(teamID)
+			teamNameInsert.key_name = str(teamID)
 			teamNameInsert.teamID = teamID
 			teamNameInsert.teamName = teamName
 			teamNameInsert.put()
+
 		# If there is an actual Kiva Team, then get stats for the team
 		if teamName is not None:
 			teamStats_query = TeamStats.all().filter('teamID =', teamID).order("date")
 			teamStatsObject = teamStats_query.fetch(1000)
 		else:
 			teamStatsObject = None
+
 		# If we don't have stats, then let the user know that.
 		if teamStatsObject is None or len(teamStatsObject)<1:
 			errorMessage = 'No team found. We currently only track data for the top 2000 teams.'
@@ -69,6 +83,7 @@ class TeamHandler(webapp.RequestHandler):
 			amountLoanedDataList = []
 			loansDataList = []
 			charts = []
+
 			# Create lists for each of the stats
 			for statsObject in teamStatsObject:
 				membersDataList.append((statsObject.date,statsObject.members))
@@ -78,13 +93,20 @@ class TeamHandler(webapp.RequestHandler):
 			amountLoanedList[0]['data'] = amountLoanedDataList
 			membersList[0]['data'] = membersDataList
 			loansList[0]['data'] = loansDataList
+
 			# Create graphs for each stat
 			charts.append(createTimeline(teamName + ' Amount Loaned', 'amountLoaned', amountLoanedList))
 			charts.append(createTimeline(teamName + ' Members', 'members', membersList))
 			charts.append(createTimeline(teamName + ' Total Loans', 'loans', loansList))
+			
+			# Get the table data from the DB
+			teamTable_query = TeamTableData.all()
+			teamTableQueryData = teamTable_query.get()
+			teamTableData = eval(teamTableQueryData.teamTable)
+			
 			# Get latest rank
 			currRank = rankList[-1][1]
-			template_values = {'rank':currRank, 'charts': charts
+			template_values = {'rank':currRank, 'charts': charts, 'teamTableData': teamTableData, 'teamName': teamName
 					}
 		# Write to index.html
 		path = os.path.join(os.path.dirname(__file__), 'index.html')
