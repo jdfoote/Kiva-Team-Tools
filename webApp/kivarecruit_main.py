@@ -33,7 +33,10 @@ class MainPage(webapp.RequestHandler):
 		# Get the table data from the DB
 		teamTable_query = TeamTableData.all()
 		teamTableQueryData = teamTable_query.get()
-		teamTableData = eval(teamTableQueryData.teamTable)
+		if teamTableQueryData:
+			teamTableData = eval(teamTableQueryData.teamTable)
+		else:
+			teamTableData = []
 		template_values = {'teamTableData': teamTableData}
 		charts = []
 		self.response.out.write(template.render(path, template_values))
@@ -102,7 +105,10 @@ class TeamHandler(webapp.RequestHandler):
 			# Get the table data from the DB
 			teamTable_query = TeamTableData.all()
 			teamTableQueryData = teamTable_query.get()
-			teamTableData = eval(teamTableQueryData.teamTable)
+			if teamTableQueryData:
+				teamTableData = eval(teamTableQueryData.teamTable)
+			else:
+				teamTableData = []
 			
 			# Get latest rank
 			currRank = rankList[-1][1]
