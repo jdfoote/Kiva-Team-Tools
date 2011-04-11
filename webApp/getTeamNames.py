@@ -8,7 +8,7 @@ class cronGetTeams(webapp.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'html'
 		self.response.out.write('<html><body>Loading teams into the DB')
-		teamsDone = getTeamNames(2000)
+		teamsDone = getTeamNames(1500)
 		if teamsDone:
 			self.response.out.write('<br/>' + str(teamsDone) + ' teams loaded')
 		else:
@@ -21,7 +21,7 @@ def getTeamNames(numberOfTeams):
 	for team in teamData:
 		teamInsert = kivarecruit_main.TeamNames(key_name = str(team['id']),
 												teamID = team['id'],
-												name = team['name'])
+												teamName = team['name'])
 		newData.append(teamInsert)
 		i += 1
 	kivarecruit_main.db.put(newData)

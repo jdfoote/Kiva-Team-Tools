@@ -2,7 +2,7 @@
 import string
 import urllib2
 import simplejson
-#from google.appengine.api.urlfetch import DownloadError 
+from google.appengine.api.urlfetch import DownloadError 
 import datetime
 
 # This may be used in the future, to get a specific list of teams. The downside is that this wouldn't give us ranking info.
@@ -51,7 +51,6 @@ def getRankedTeams(numberOfTeams):
 					print 'Error code: ', e.code
 			except DownloadError:
 				return None
-				return
 	return rankedTeams
 
 # This is pretty unnecessary, but I use it anyway.
@@ -61,11 +60,13 @@ def getTeamStats(teamInfo):
 	return teamStats
 
 def prepTeamTableStats(teamsInfo):
+	'''Given a list of team info dictionaries, returns only the data needed for the team table'''
 	teamTableStats = []
 	for team in teamsInfo:
 		teamCreation = datetime.datetime.strptime(team['team_since'], '%Y-%m-%dT%H:%M:%SZ')
 		teamDuration = (datetime.datetime.utcnow() - teamCreation).days
-		teamStats = {'teamName': team['name'], 'members': team['member_count'], 'loans': team['loan_count'], 'loanAmount': team['loaned_amount'], 'teamDuration': teamDuration, 'amountPerMember': team['loaned_amount']/team['member_count'], 'membersPerDay': team['member_count']/teamDuration, 'loanAmountPerDay': team['loaned_amount']/teamDuration}
+		
+		teamStats = {'teamName': team['name'], 'members': team['member_count'], 'loans': team['loan_count'], 'loanAmount': team['loaned_amount'], 'teamDuration': teamDuration, 'amountPerMember': team['loaned_amount']/team['member_count'], 'membersPerDay': '%.2f' % (float(team['member_count'])/teamDuration), 'loanAmountPerDay': team['loaned_amount']/teamDuration}
 		teamTableStats.append(teamStats)
 	return teamTableStats
 

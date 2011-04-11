@@ -16,7 +16,7 @@ class cronGetTeams(webapp.RequestHandler):
 
 def getTeamData():
 	# Get the info for all of the teams
-	allTeams = getKivaData.getRankedTeams(2000)
+	allTeams = getKivaData.getRankedTeams(1500)
 	# Just get the stuff we want
 	if allTeams:
 		# Info for the team stats stored in the DB

@@ -45,15 +45,7 @@ class TeamHandler(webapp.RequestHandler):
 	def post(self):
 		# Get the input from the web form
 		teamNameInput = self.request.get("teamName")
-
-		# If it's a number, assume that it's the Team ID
-		if is_number(teamNameInput):
-			teamID = int(teamNameInput)
-			teamName = getKivaData.getTeamName(teamID)
-
-		# If it's a string, then get the team ID and name of the first match
-		else:
-			teamID, teamName = getKivaData.getTeamID(teamNameInput)
+		teamID, teamName = getNameAndID(teamNameInput)
 
 		# Figure out if the team is in the TeamNames DB. If it isn't, then add it.
 		# Eventually, we can choose to get data from teams in this DB, that aren't in the top 2000 teams.
@@ -68,39 +60,85 @@ class TeamHandler(webapp.RequestHandler):
 
 		# If there is an actual Kiva Team, then get stats for the team
 		if teamName is not None:
-			teamStats_query = TeamStats.all().filter('teamID =', teamID).order("date")
-			teamStatsObject = teamStats_query.fetch(1000)
+			teamStatsObject = queryTeamStats(teamID, 1000)
 		else:
 			teamStatsObject = None
+			
 
 		# If we don't have stats, then let the user know that.
 		if teamStatsObject is None or len(teamStatsObject)<1:
-			errorMessage = 'No team found. We currently only track data for the top 2000 teams.'
+			errorMessage = 'No team found. We currently only track data for the top 1500 teams.'
 			template_values = {'errorMessage':errorMessage}
-		else:
-			membersList = [{'dataType': 'Members'}]
-			amountLoanedList = [{'dataType': 'Amount Loaned'}]
-			rankList = []
-			loansList = [{'dataType': 'Loans'}]
-			membersDataList = []
-			amountLoanedDataList = []
-			loansDataList = []
-			charts = []
+		else:		
+			# Get stats for the team before and after the top team
+			currRank = teamStatsObject[-1].rank
+			teamStatsObjectList = [teamStatsObject]
+			teamNamesList = [teamName]
+			# If they are the first place team, then only get the team after them.
+			if currRank > 1:
+				i = currRank - 1
+			else:
+				i = currRank + 1
+			while i <= currRank + 1:
+				# Get the team ID of the team with the given rank.
+				otherTeamID_query = TeamStats.all().filter('rank =', i).order("-date")
+				otherTeamID_Object = otherTeamID_query.get()
+				otherTeamID = otherTeamID_Object.teamID
+				# Get the team name, for labelling the chart
+				otherTeamName = queryTeamName(otherTeamID)
+				teamNamesList.append(smart_truncate(otherTeamName,25))
+				# Get the data for this team
+				otherTeamStatsObject = queryTeamStats(otherTeamID, 1000)
+				# Add the data to the list
+				teamStatsObjectList.append(otherTeamStatsObject)
+				i += 2
+			# Prepare the lists of column names
+			amountLoanedColumns = []
+			membersColumns = []
+			loansColumns = []
 
+			for i in teamNamesList:
+				amountLoanedColumns.append(i + ' Amount')
+				membersColumns.append(i + ' Members')
+				loansColumns.append(i + ' Loans')
+
+			# Prepare the data
+			membersData = []
+			amountLoanedData = []
+			loansData = []
+			charts = []
+			for i, teamStatsObject in enumerate(teamStatsObjectList):
 			# Create lists for each of the stats
-			for statsObject in teamStatsObject:
-				membersDataList.append((statsObject.date,statsObject.members))
-				amountLoanedDataList.append((statsObject.date,statsObject.amountLoaned))
-				rankList.append((statsObject.date,statsObject.rank))
-				loansDataList.append((statsObject.date,statsObject.loans))
-			amountLoanedList[0]['data'] = amountLoanedDataList
-			membersList[0]['data'] = membersDataList
-			loansList[0]['data'] = loansDataList
+				for statsObject in teamStatsObject:
+					if len(membersData) < 1:
+						membersData.append({'date': statsObject.date, membersColumns[i]: statsObject.members})
+					else:
+						for j in membersData:
+							if statsObject.date == j['date']:
+								j[membersColumns[i]] = (statsObject.members)
+							else:
+								membersData.append({'date': statsObject.date, membersColumns[i]: statsObject.members}) 
+					if len(amountLoanedData) < 1:
+						amountLoanedData.append({'date': statsObject.date, amountLoanedColumns[i]: statsObject.amountLoaned}) 
+					else:
+						for j in amountLoanedData:
+							if statsObject.date == j['date']:
+								j[amountLoanedColumns[i]] = (statsObject.amountLoaned)
+							else:
+								amountLoanedData.append({'date': statsObject.date, amountLoanedColumns[i]: statsObject.amountLoaned}) 
+					if len(loansData) < 1:
+						loansData.append({'date': statsObject.date, loansColumns[i]: statsObject.loans})
+					else:
+						for j in loansData:
+							if statsObject.date == j['date']:
+								j[loansColumns[i]] = (statsObject.loans)
+							else:
+								loansData.append({'date': statsObject.date, loansColumns[i]: statsObject.loans})
 
 			# Create graphs for each stat
-			charts.append(createTimeline(teamName + ' Amount Loaned', 'amountLoaned', amountLoanedList))
-			charts.append(createTimeline(teamName + ' Members', 'members', membersList))
-			charts.append(createTimeline(teamName + ' Total Loans', 'loans', loansList))
+			charts.append(createTimeline(teamName + ' Amount Loaned', 'amountLoaned', amountLoanedColumns, amountLoanedData))
+			charts.append(createTimeline(teamName + ' Members', 'members', membersColumns, membersData))
+			charts.append(createTimeline(teamName + ' Total Loans', 'loans', loansColumns, loansData))
 			
 			# Get the table data from the DB
 			teamTable_query = TeamTableData.all()
@@ -110,8 +148,6 @@ class TeamHandler(webapp.RequestHandler):
 			else:
 				teamTableData = []
 			
-			# Get latest rank
-			currRank = rankList[-1][1]
 			template_values = {'rank':currRank, 'charts': charts, 'teamTableData': teamTableData, 'teamName': teamName
 					}
 		# Write to index.html
@@ -123,8 +159,6 @@ application = webapp.WSGIApplication(
 								  ('/displayTeamStats', TeamHandler)],
 								 debug=True)
 
-def main():
-	run_wsgi_app(application)
 	
 # Check if a string is a number
 def is_number(s):
@@ -135,24 +169,57 @@ def is_number(s):
 		return False
 
 # Create the data needed for a Google Timeline chart
-def createTimeline(chartName, chartType, dataList):
-	'''Create a for Google Visualization Timeline, given a team name, graph name, and a data list in the format [{'dataType': 'Type of Data', 'data': [(date,dataPoint),(date1,dataPoint1)}]'''
-	chart = {'chartName': chartName, 'chartType':chartType}
-	columns = []
+def createTimeline(chartName, chartType, columnNames, chartData):
+	'''Create a for Google Visualization Timeline, given a chart name, chart Type, a list of names for the non-date columns, and data in the format [{'date': date0, 'columnName0': data0, 'columnName1': data1}]'''
+	chart = {'chartName': chartName, 'chartType': chartType, 'columns': columnNames}
 	data = []
 	i = 0
-	# Go through each of the items in the dataList
-	while i <len(dataList):
-		# Get the data types, and put them into 'columns'
-		columns.append(dataList[i]['dataType'])
-		# Go through every data item, put them in the format required by the Visualization API
-		for dataItem in dataList[i]['data']:
-			dateItem = str(dataItem[0].year) + ',' + str(dataItem[0].month - 1) + ',' + str(dataItem[0].day)
-			data.append('(' + dateItem + '),' + 'undefined,'*i + str(dataItem[1]) + ',undefined'*(len(dataList)-i-1))
+	# Go through each of the items in the dataList, and put them in the format required by the Visualization API
+	while i <len(chartData):
+		for dataItem in chartData:
+			dateItem = str(dataItem['date'].year) + ',' + str(dataItem['date'].month - 1) + ',' + str(dataItem['date'].day)
+			dataPoints = []
+			for j in columnNames:
+				if j in dataItem:
+					dataPoints.append(str(dataItem[j]))
+				else:
+					dataPoints.append('undefined')
+			dataPointsString = ','.join(dataPoints)
+			data.append('(' + dateItem + '),' + dataPointsString)
 		i += 1
-	chart['columns'] = columns
+	chart['columns'] = columnNames
 	chart['data'] = data
 	return chart
+	
+def queryTeamStats(teamID, results):
+	teamStats_query = TeamStats.all().filter('teamID =', teamID).order("date")
+	teamStatsObject = teamStats_query.fetch(1000)
+	return teamStatsObject
+
+def queryTeamName(teamID):
+	teamNameQuery = TeamNames.get_by_key_name(str(teamID))
+	teamName = teamNameQuery.teamName
+	return teamName
+	
+def getNameAndID(teamNameInput):
+	# If it's a number, assume that it's the Team ID
+	if is_number(teamNameInput):
+		teamID = int(teamNameInput)
+		teamName = getKivaData.getTeamName(teamID)
+
+	# If it's a string, then get the team ID and name of the first match
+	else:
+		teamID, teamName = getKivaData.getTeamID(teamNameInput)
+	return teamID, teamName
+
+def smart_truncate(content, length=100, suffix='...'):
+	if len(content) <= length:
+		return content
+	else:
+		return content[:length].rsplit(' ', 1)[0]+suffix
+
+def main():
+	run_wsgi_app(application)
 
 if __name__ == "__main__":
 	main()
