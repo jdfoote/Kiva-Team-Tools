@@ -1,5 +1,5 @@
 application: kivarecruit
-version: 1
+version: 2
 runtime: python
 api_version: 1
 
@@ -12,6 +12,9 @@ handlers:
 
 - url: /js
   static_dir: static/js
+
+- url: /images
+  static_dir: static/images
 
 - url: /tasks/teamData
   script: getTeamData.py

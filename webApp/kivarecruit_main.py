@@ -205,8 +205,7 @@ def getNameAndID(teamNameInput):
 	# If it's a number, assume that it's the Team ID
 	if is_number(teamNameInput):
 		teamID = int(teamNameInput)
-		teamName = getKivaData.getTeamName(teamID)
-
+		teamName = queryTeamName(teamID)
 	# If it's a string, then get the team ID and name of the first match
 	else:
 		teamID, teamName = getKivaData.getTeamID(teamNameInput)
