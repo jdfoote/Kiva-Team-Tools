@@ -21,6 +21,12 @@ indexes:
   - name: teamID
   - name: date
 
+- kind: TeamStats
+  properties:
+  - name: teamID
+  - name: date
+    direction: desc
+
 - kind: UserPrefs
   properties:
   - name: userID

@@ -6,6 +6,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 import getKivaData
 from google.appengine.ext import db
 import simplejson
+import logging
 
 # Database classes
 # This class stores daily stats for a team
@@ -45,6 +46,7 @@ class TeamHandler(webapp.RequestHandler):
 	def post(self):
 		# Get the input from the web form
 		teamNameInput = self.request.get("teamName")
+		includeOthers = self.request.get("includeOthers")
 		teamID, teamName = getNameAndID(teamNameInput)
 
 		# Figure out if the team is in the TeamNames DB. If it isn't, then add it.
@@ -71,69 +73,60 @@ class TeamHandler(webapp.RequestHandler):
 			template_values = {'errorMessage':errorMessage}
 		else:		
 			# Get stats for the team before and after the top team
-			currRank = teamStatsObject[-1].rank
+			currRank = queryCurrRank(teamID)
 			teamStatsObjectList = [teamStatsObject]
 			teamNamesList = [teamName]
 			# If they are the first place team, then only get the team after them.
-			if currRank > 1:
-				i = currRank - 1
-			else:
-				i = currRank + 1
-			while i <= currRank + 1:
-				# Get the team ID of the team with the given rank.
-				otherTeamID_query = TeamStats.all().filter('rank =', i).order("-date")
-				otherTeamID_Object = otherTeamID_query.get()
-				otherTeamID = otherTeamID_Object.teamID
-				# Get the team name, for labelling the chart
-				otherTeamName = queryTeamName(otherTeamID)
-				teamNamesList.append(smart_truncate(otherTeamName,25))
-				# Get the data for this team
-				otherTeamStatsObject = queryTeamStats(otherTeamID, 1000)
-				# Add the data to the list
-				teamStatsObjectList.append(otherTeamStatsObject)
-				i += 2
+			if includeOthers == 'true':
+				if currRank > 1:
+					i = currRank - 1
+				else:
+					i = currRank + 1
+				while i <= currRank + 1:
+					# Get the team ID of the team with the given rank.
+					otherTeamID = queryTeamID(i)
+					# Get the team name, for labelling the chart
+					otherTeamName = queryTeamName(otherTeamID)
+					teamNamesList.append(smart_truncate(otherTeamName,25))
+					# Get the data for this team
+					otherTeamStatsObject = queryTeamStats(otherTeamID, 1000)
+					# Add the data to the list
+					teamStatsObjectList.append(otherTeamStatsObject)
+					i += 2
+				
 			# Prepare the lists of column names
 			amountLoanedColumns = []
 			membersColumns = []
 			loansColumns = []
-
 			for i in teamNamesList:
 				amountLoanedColumns.append(i + ' Amount')
 				membersColumns.append(i + ' Members')
 				loansColumns.append(i + ' Loans')
 
 			# Prepare the data
-			membersData = []
-			amountLoanedData = []
-			loansData = []
+			membersMap = {}
+			amountLoanedMap = {}
+			loansMap = {}
 			charts = []
+			logCount = 0
 			for i, teamStatsObject in enumerate(teamStatsObjectList):
-			# Create lists for each of the stats
-				for statsObject in teamStatsObject:
-					if len(membersData) < 1:
-						membersData.append({'date': statsObject.date, membersColumns[i]: statsObject.members})
+				for j in teamStatsObject:
+					if j in membersMap:
+						membersMap[j][membersColumns[i]] = teamStatsObject[j]['members']
 					else:
-						for j in membersData:
-							if statsObject.date == j['date']:
-								j[membersColumns[i]] = (statsObject.members)
-							else:
-								membersData.append({'date': statsObject.date, membersColumns[i]: statsObject.members}) 
-					if len(amountLoanedData) < 1:
-						amountLoanedData.append({'date': statsObject.date, amountLoanedColumns[i]: statsObject.amountLoaned}) 
+						membersMap[j] = {'date': j, membersColumns[i]: teamStatsObject[j]['members']}
+					if j in amountLoanedMap:
+						amountLoanedMap[j][amountLoanedColumns[i]] = teamStatsObject[j]['amountLoaned']
 					else:
-						for j in amountLoanedData:
-							if statsObject.date == j['date']:
-								j[amountLoanedColumns[i]] = (statsObject.amountLoaned)
-							else:
-								amountLoanedData.append({'date': statsObject.date, amountLoanedColumns[i]: statsObject.amountLoaned}) 
-					if len(loansData) < 1:
-						loansData.append({'date': statsObject.date, loansColumns[i]: statsObject.loans})
+						amountLoanedMap[j] = {'date': j, amountLoanedColumns[i]: teamStatsObject[j]['amountLoaned']}
+					if j in loansMap:
+						loansMap[j][loansColumns[i]] = teamStatsObject[j]['loans']
 					else:
-						for j in loansData:
-							if statsObject.date == j['date']:
-								j[loansColumns[i]] = (statsObject.loans)
-							else:
-								loansData.append({'date': statsObject.date, loansColumns[i]: statsObject.loans})
+						loansMap[j] = {'date': j, loansColumns[i]: teamStatsObject[j]['loans']}
+			membersData = mapToList(membersMap)
+			amountLoanedData = mapToList(amountLoanedMap)
+			loansData = mapToList(loansMap)
+
 
 			# Create graphs for each stat
 			charts.append(createTimeline(teamName + ' Amount Loaned', 'amountLoaned', amountLoanedColumns, amountLoanedData))
@@ -194,12 +187,29 @@ def createTimeline(chartName, chartType, columnNames, chartData):
 def queryTeamStats(teamID, results):
 	teamStats_query = TeamStats.all().filter('teamID =', teamID).order("date")
 	teamStatsObject = teamStats_query.fetch(1000)
-	return teamStatsObject
+	teamStats = {}
+	for o in teamStatsObject:
+		if o not in teamStats:
+			teamStats[o.date] = {'date': o.date, 'members': o.members, 'amountLoaned': o.amountLoaned, 'loans': o.loans, 'rank': o.rank}
+	return teamStats
 
 def queryTeamName(teamID):
 	teamNameQuery = TeamNames.get_by_key_name(str(teamID))
 	teamName = teamNameQuery.teamName
 	return teamName
+
+def queryCurrRank(teamID):
+	currRankQuery = TeamStats.all().filter('teamID =', teamID).order("-date")
+	currRank_Object = currRankQuery.get()
+	currRank = currRank_Object.rank
+	return currRank
+
+def queryTeamID(rank):
+	'''Returns a team ID, given the most recent rank'''
+	teamID_query = TeamStats.all().filter('rank =', rank).order("-date")
+	teamID_Object = teamID_query.get()
+	teamID = teamID_Object.teamID
+	return teamID
 	
 def getNameAndID(teamNameInput):
 	# If it's a number, assume that it's the Team ID
@@ -216,6 +226,13 @@ def smart_truncate(content, length=100, suffix='...'):
 		return content
 	else:
 		return content[:length].rsplit(' ', 1)[0]+suffix
+
+def mapToList(dictionary):
+	'''Takes a dictionary of dictionaries, and changes it to a list of dictionaries, removing the keys'''
+	newList = []
+	for i in dictionary:
+		newList.append(dictionary[i])
+	return newList
 
 def main():
 	run_wsgi_app(application)

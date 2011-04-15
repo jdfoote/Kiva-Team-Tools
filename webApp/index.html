@@ -81,7 +81,7 @@
  
 	<form action="/displayTeamStats" method="post">
 		<div><h3>Team Name or Team ID:</h3></div>
-		<div><input type="text" name="teamName" size="30"/></div>
+		<div><input type="text" name="teamName" size="30"/> <input type="checkbox" name="includeOthers" value="true">Include other teams<br></div>
 		<div><input type="submit" value="Display Team Stats"/></div>
 	</form>
 {% if errorMessage %}
